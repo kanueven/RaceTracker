@@ -21,9 +21,11 @@ import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.OutlinedButton
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
+import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
+import androidx.compose.runtime.saveable.rememberSaveable
 import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
@@ -35,21 +37,32 @@ import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.tooling.preview.Preview
 import com.example.racetracker.R
 import com.example.racetracker.ui.theme.RaceTrackerTheme
+import kotlinx.coroutines.coroutineScope
+import kotlinx.coroutines.launch
 
 @Composable
 fun RaceTrackerApp() {
-    /**
-     * Note: To survive the configuration changes such as screen rotation, [rememberSaveable] should
-     * be used with custom Saver object. But to keep the example simple, and keep focus on
-     * Coroutines that implementation detail is stripped out.
-     */
-    val playerOne = remember {
+
+    val playerOne = rememberSaveable() {
         RaceParticipant(name = "Player 1", progressIncrement = 1)
     }
-    val playerTwo = remember {
+    val playerTwo = rememberSaveable() {
         RaceParticipant(name = "Player 2", progressIncrement = 2)
     }
     var raceInProgress by remember { mutableStateOf(false) }
+
+   if(raceInProgress){
+       LaunchedEffect(playerOne,playerTwo) {
+       coroutineScope{
+           launch{playerOne.run()}
+           launch{playerTwo.run()}
+       }
+           /*Update the raceInProgress flag to false to finish the race.
+           This value is set to false when the user clicks on Pause too.*/
+           raceInProgress = false // This will update the state immediately, without waiting for players to finish run() execution
+
+       }
+   }
 
     RaceTrackerScreen(
         playerOne = playerOne,
